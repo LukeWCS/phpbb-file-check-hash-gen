@@ -18,7 +18,7 @@
 */
 include __DIR__ . '/filecheck_hash_gen_config.php';
 
-$ver				= '0.4.1';
+$ver				= '0.4.2';
 $title				= "phpBB File Check Hash Generator v{$ver}";
 $lf					= "\n";
 $start_time			= microtime(true);
@@ -29,7 +29,7 @@ echo str_repeat('=', strlen($title)) . $lf . $lf;
 /*
 * CLI interface
 */
-$cli_options		= cli_init();
+$cli_options = cli_init();
 
 if (cli_is_option('h'))
 {
@@ -49,7 +49,7 @@ if (cli_is_option('source-2'))
 {
 	$config['source_secondary'] = cli_get_option('source-2');
 }
-else if (empty($config['source_secondary']))
+else if (empty($config['source_secondary']) && !empty($config['name_secondary']))
 {
 	terminate('Parameter for the secondary package is not set');
 }
@@ -61,6 +61,15 @@ if (cli_is_option('export-to'))
 else if (empty($config['folder_export']))
 {
 	$config['folder_export'] = __DIR__;
+}
+
+if (empty($config['name_primary']))
+{
+	terminate('Primary package name is not set');
+}
+if (empty($config['name_secondary']) && !empty($config['source_secondary']))
+{
+	terminate('Secondary package name is not set');
 }
 
 /*
@@ -81,18 +90,28 @@ $config['folder_export'] = add_dir_separator($config['folder_export']);
 * Check the phpBB packages and determine their versions (ZIP or folder)
 */
 $phpbb_version_primary = get_package_version($config['source_primary'], $config['name_primary'], $config['zip_phpbb_root']);
-$phpbb_version_secondary = get_package_version($config['source_secondary'], $config['name_secondary'], $config['zip_phpbb_root']);
+// $phpbb_version_secondary = '';
+if (!empty($config['source_secondary']))
+{
+	$phpbb_version_secondary = get_package_version($config['source_secondary'], $config['name_secondary'], $config['zip_phpbb_root']);
+}
 
 $checksum_file_primary = 'filecheck_' . $phpbb_version_primary . '.md5';
-$checksum_file_diff = 'filecheck_' . $phpbb_version_secondary . '_diff' . '.md5';
+if (!empty($config['source_secondary']))
+{
+	$checksum_file_diff = 'filecheck_' . $phpbb_version_secondary . '_diff' . '.md5';
+}
 
 echo sprintf('Version primary    : %1$s (%2$s)', $phpbb_version_primary, $config['name_primary']) . $lf;
-echo sprintf('Version secondary  : %1$s (%2$s)', $phpbb_version_secondary, $config['name_secondary']) . $lf;
+if (!empty($config['source_secondary']))
+{
+	echo sprintf('Version secondary  : %1$s (%2$s)', $phpbb_version_secondary, $config['name_secondary']) . $lf;
+}
 
 /*
 * Check if both packages have the same version
 */
-if ($phpbb_version_secondary != $phpbb_version_primary)
+if (!empty($config['source_secondary']) && $phpbb_version_secondary != $phpbb_version_primary)
 {
 	terminate("{$config['name_primary']} package and {$config['name_secondary']} package has different versions");
 }
@@ -124,13 +143,14 @@ else
 $count_primary = count($checksums_primary);
 
 /*
-* Create an internal checksum list of the secondary package (ZIP or folder)
+* Create an internal checksum list of the secondary package (ZIP or folder) if exists
 */
+$checksums_secondary = [];
 if (is_zip($config['source_secondary']))
 {
 	$checksums_secondary = get_checksums_from_zip($config['source_secondary'], $config['zip_phpbb_root']);
 }
-else
+else if (!empty($config['source_secondary']))
 {
 	$checksums_secondary = get_checksums_from_folder($config['source_secondary']);
 }
@@ -155,12 +175,15 @@ $checksum_file_content_primary .= "{$config['name_primary']}:" . $phpbb_version_
 /*
 * Generate the contents of the checksum file for the differences
 */
-$checksum_file_content_diff = '';
-foreach ($checksums_diff as $file => $hash)
+if (!empty($config['source_secondary']))
 {
-	$checksum_file_content_diff .= $hash . ' *' . $file . $lf;
+	$checksum_file_content_diff = '';
+	foreach ($checksums_diff as $file => $hash)
+	{
+		$checksum_file_content_diff .= $hash . ' *' . $file . $lf;
+	}
+	$checksum_file_content_diff .= "{$config['name_secondary']}:" . $phpbb_version_secondary . $lf;
 }
-$checksum_file_content_diff .= "{$config['name_secondary']}:" . $phpbb_version_secondary . $lf;
 
 /*
 * Create the ZIP archive
@@ -170,7 +193,10 @@ $zip = new ZipArchive;
 if ($zip->open($hash_package_zip_file, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true)
 {
 	$zip->addFromString(basename($checksum_file_primary), $checksum_file_content_primary);
-	$zip->addFromString(basename($checksum_file_diff), $checksum_file_content_diff);
+	if (!empty($config['source_secondary']))
+	{
+		$zip->addFromString(basename($checksum_file_diff), $checksum_file_content_diff);
+	}
 	if ($config['file_ignore'])
 	{
 		$zip->addFile($config['file_ignore'], basename($config['file_ignore']));
@@ -196,16 +222,19 @@ echo sprintf('Checksums primary  : %1$ 4u (%2$s) -> %3$s (%4$u bytes)',
 	$checksum_file_primary,
 	strlen($checksum_file_content_primary)
 ) . $lf;
-echo sprintf('Checksums secondary: %1$ 4u (%2$s)',
-	$count_secondary,
-	$config['name_secondary']
-) . $lf;
-echo sprintf('Checksums diff     : %1$ 4u (%2$s) -> %3$s (%4$u bytes)',
-	$count_diff,
-	$config['name_secondary'],
-	$checksum_file_diff,
-	strlen($checksum_file_content_diff)
-) . $lf;
+if (!empty($config['source_secondary']))
+{
+	echo sprintf('Checksums secondary: %1$ 4u (%2$s)',
+		$count_secondary,
+		$config['name_secondary']
+	) . $lf;
+	echo sprintf('Checksums diff     : %1$ 4u (%2$s) -> %3$s (%4$u bytes)',
+		$count_diff,
+		$config['name_secondary'],
+		$checksum_file_diff,
+		strlen($checksum_file_content_diff)
+	) . $lf;
+}
 echo sprintf('ZIP archive        : %1$s (%2$u bytes)',
 	basename($hash_package_zip_file),
 	filesize($hash_package_zip_file)
@@ -252,7 +281,7 @@ function get_package_version(string $source, string $package_name, string $zip_r
 {
 	$get_version = function ($content) use ($package_name)
 	{
-		preg_match('/\'PHPBB_VERSION\'.*?\'([0-9]+?\.[0-9]+?\.[0-9]+?)\'/', $content, $matches);
+		preg_match('/\'PHPBB_VERSION\'.*?\'([0-9]+\.[0-9]+\.[0-9]+)\'/', $content, $matches);
 		$version = $matches[1] ?? null;
 		if ($version)
 		{
@@ -376,7 +405,7 @@ function cli_help()
 {
 	global $lf;
 
-	echo 'Syntax: filecheck_hash_gen.php {parameter 1} {parameter 2} ...' . $lf;
+	echo 'Syntax: filecheck_hash_gen.php {parameters}' . $lf;
 	echo $lf;
 	echo 'Parameters:' . $lf;
 	echo '    --source-1="{ZIP or folder}"    [primary phpBB package]' . $lf;
