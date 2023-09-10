@@ -1,0 +1,6 @@
+ext/phpbb/viglink/language/de/
+ext/phpbb/viglink/language/de_x_sie/
+language/de/
+language/de_x_sie/
+styles/prosilver/theme/de/
+styles/prosilver/theme/de_x_sie/
