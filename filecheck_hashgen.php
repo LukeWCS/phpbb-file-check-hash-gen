@@ -33,7 +33,7 @@ else
 	terminate('config file [' . basename(CONFIG_FILE) . '] not found');
 }
 
-$ver				= '0.5.0';
+$ver				= '0.5.1';
 $title				= "phpBB File Check Hash Generator v{$ver}";
 $ignore_file		= 'filecheck_ignore.txt';
 $exceptions_file	= 'filecheck_exceptions.txt';
@@ -128,9 +128,12 @@ if (empty($config['hash-zip-name']))
 }
 if (empty($config['timezone-id']))
 {
-	$config['timezone-id'] = '';
+	$config['timezone-id'] = 'UTC';
 }
-date_default_timezone_set($config['timezone-id']);
+if (!@date_default_timezone_set($config['timezone-id']))
+{
+	terminate('Invalid timezone ID');
+}
 
 /*
 * Add final path separator

@@ -1,3 +1,8 @@
+### 0.5.1
+(2023-09-30)
+
+* Fix: Bei ungültiger Zeitzonen ID wurde E_NOTICE getriggert. Das wird jetzt abgefangen und eine kontrollierte Fehlermeldung ausgegeben.
+
 ### 0.5.0
 (2023-09-20)
 
