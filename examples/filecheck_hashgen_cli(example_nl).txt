@@ -1,0 +1,1 @@
+php filecheck_hashgen.php --source-1="phpBB-3.3.10.zip" --source-2="phpBB-NL-3.3.10.zip"

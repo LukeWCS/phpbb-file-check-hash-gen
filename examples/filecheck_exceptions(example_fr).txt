@@ -1,0 +1,3 @@
+ext/phpbb/viglink/language/fr/
+language/fr/
+styles/prosilver/theme/fr/

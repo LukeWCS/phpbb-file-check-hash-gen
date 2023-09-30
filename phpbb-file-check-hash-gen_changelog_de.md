@@ -1,3 +1,21 @@
+### 0.5.0
+(2023-09-20)
+
+* Dateien von HashGen umbenannt, damit diese zum Namensmuster von FileCheck passen.
+* Konfig-Variablen und CLI-Parameter haben jetzt dieselben Namen.
+* Für maximale Flexibilität sind nun alle Konfig-Variablen auch als CLI-Parameter verfügbar. Ist ein CLI-Parameter nicht angegeben, wird die Konfig-Variable verwendet.
+* Die beiden Funktionen zum Ermitteln der Prüfsummen aller Dateien eines ZIPs und eines Ordners zu einer einzigen Funktion zusammengefasst, bei der nur noch die Quelle angegeben werden muss.
+* Die beiden zusätzlichen Dateien `filecheck_ignore.txt` und `filecheck_exceptions.txt` die zum ZIP hinzugefügt werden, bekommen jetzt den aktuellen Zeitstempel im ZIP. Setzt PHP 8.0 voraus.
+* In `filecheck_hashgen_config.php` kann jetzt für `filecheck_ignore.txt` und `filecheck_exceptions.txt` jeweils ein abweichender Quell-Dateiname angegeben werden. Im ZIP bekommen diese beiden Dateien dann automatisch den korrekten Dateinamen, der von FileCheck erwartet wird.
+* Nachdem das Hash Paket ZIP erstellt wurde, wird dieses zur Kontrolle geöffnet und der Inhalt angezeigt.
+* Fehlerbehandlung erweitert: 
+  * Ist eine angegebene Quelle nicht vorhanden (ZIP oder Ordner), wird das explizit gemeldet. Bislang gab es nur eine indirekte Fehlermeldung bezüglich fehlender `constants.php`.
+  * Enthält ein Dateiname vom phpBB Paket unerlaubte Zeichen, wird das gemeldet und die Ausführung abgebrochen. In diesem Fall muss die Konstante `VALID_CHARS` sowohl bei "phpBB File Check Hash Gen" als auch bei "phpBB File Check" angepasst werden.
+  * Es werden jetzt alle relevanten Parameter und Einstellungen geprüft.
+  * An etlichen Stellen gibt es zusätzliche Prüfungen um im Fehlerfall kontrollierte Fehlermeldungen ausgeben zu können.
+* Code Verbesserungen.
+* PHP Mindestversion geändert: 7.1 -> 8.0
+
 ### 0.4.2
 (2023-07-31)
 
