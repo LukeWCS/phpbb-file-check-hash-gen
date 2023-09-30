@@ -3,4 +3,3 @@
 * text eol=lf
 .editorconfig export-ignore
 .gitattributes export-ignore
-phpbb-file-check-hash-gen_changelog_de.md export-ignore
