@@ -3,8 +3,6 @@
 *
 * phpBB File Check Hash Generator - Creates checksum packages for phpBB File Check
 *
-* PHP: >=8.0.0,<8.3.0
-*
 * @copyright (c) 2023 LukeWCS <phpBB.de>
 * @license GNU General Public License, version 2 (GPL-2.0-only)
 *
@@ -45,14 +43,14 @@ $config = [
 	'zip-root'			=> 'phpBB3/',
 
 /*-
- The label of the hash package. Required for various displays, including error messages.
- This is also used by “phpBB File Check”.
+ The label of the primary hash package. Required for various displays, including error messages.
+ This is also used by "phpBB File Check".
 -*/
 	'source-1-label'	=> 'phpBB.com',
 
 /*-
- The label of the hash package. Required for various displays, including error messages.
- This is also used by “phpBB File Check”.
+ The label of the secondary hash package. Required for various displays, including error messages.
+ This is also used by "phpBB File Check".
 -*/
 	'source-2-label'	=> 'phpBB.nl',
 

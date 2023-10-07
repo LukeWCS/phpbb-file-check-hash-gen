@@ -3,19 +3,26 @@
 *
 * phpBB File Check Hash Generator - Creates checksum packages for phpBB File Check
 *
-* PHP: >=8.0.0,<8.3.0
-*
 * @copyright (c) 2023 LukeWCS <phpBB.de>
 * @license GNU General Public License, version 2 (GPL-2.0-only)
 *
+*/
+
+/*
+* Help: filecheck_hashgen.php -h
 */
 
 # phpcs:set VariableAnalysis.CodeAnalysis.VariableAnalysis validUndefinedVariableNames config
 # phpcs:disable PSR1.Files.SideEffects
 
 /*
-* Help: filecheck_hashgen.php -h
+* Check requirements
 */
+if (!(version_compare(PHP_VERSION, '8.0.0', '>=') && version_compare(PHP_VERSION, '8.3.0-dev', '<')))
+{
+	echo 'phpBB File Check Hash Generator: Invalid PHP Version ' . PHP_VERSION;
+	exit;
+}
 
 /*
 * Initialization
@@ -24,16 +31,7 @@ define('EOL'			, "\n");
 define('VALID_CHARS'	, 'a-zA-Z0-9\/\-_.');
 define('CONFIG_FILE'	, __DIR__ . '/' . basename(__FILE__, '.php') . '_config.php');
 
-if (file_exists(CONFIG_FILE))
-{
-	include CONFIG_FILE;
-}
-else
-{
-	terminate('config file [' . basename(CONFIG_FILE) . '] not found');
-}
-
-$ver				= '0.5.1';
+$ver				= '1.0.0';
 $title				= "phpBB File Check Hash Generator v{$ver}";
 $ignore_file		= 'filecheck_ignore.txt';
 $exceptions_file	= 'filecheck_exceptions.txt';
@@ -46,13 +44,26 @@ echo $title . EOL ;
 echo str_repeat('=', strlen($title)) . EOL . EOL;
 
 /*
+* Include config
+*/
+if (file_exists(CONFIG_FILE))
+{
+	include CONFIG_FILE;
+}
+else
+{
+	terminate('Config file [' . basename(CONFIG_FILE) . '] not found');
+}
+
+/*
 * CLI interface
 */
 cli_init();
 
 if (cli_is_option('h'))
 {
-	cli_help();
+	echo cli_help();
+	exit;
 }
 if (cli_is_option('source-1'))
 {
@@ -138,11 +149,11 @@ if (!@date_default_timezone_set($config['timezone-id']))
 /*
 * Add final path separator
 */
-if (!is_zip($config['source-1']))
+if (is_dir($config['source-1']))
 {
 	add_dir_separator($config['source-1']);
 }
-if (!empty($config['source-2']) && !is_zip($config['source-2']))
+if (!empty($config['source-2']) && is_dir($config['source-2']))
 {
 	add_dir_separator($config['source-2']);
 }
@@ -209,12 +220,12 @@ if (!empty($config['source-2']) && $phpbb_version_secondary != $phpbb_version_pr
 */
 if (!empty($config['ignore-file']) && !file_exists($config['ignore-file']))
 {
-	terminate("ignore list [{$config['ignore-file']}] not found");
+	terminate("Ignore list [{$config['ignore-file']}] not found");
 }
 
 if (!empty($config['exceptions-file']) && !file_exists($config['exceptions-file']))
 {
-	terminate("exception list [{$config['exceptions-file']}] not found");
+	terminate("Exception list [{$config['exceptions-file']}] not found");
 }
 
 /*
@@ -241,24 +252,14 @@ if (!empty($config['source-2']))
 /*
 * Generate the content of the checksum file for the primary package
 */
-$checksum_file_content_primary = '';
-foreach ($checksums_primary as $file => $hash)
-{
-	$checksum_file_content_primary .= $hash . ' *' . $file . EOL;
-}
-$checksum_file_content_primary .= $config['source-1-label'] . ':' . $phpbb_version_primary . EOL;
+$checksum_file_content_primary = create_checksum_file($checksums_primary, $config['source-1-label'], $phpbb_version_primary);
 
 /*
 * Generate the content of the checksum file for the differences
 */
 if (!empty($config['source-2']))
 {
-	$checksum_file_content_diff = '';
-	foreach ($checksums_diff as $file => $hash)
-	{
-		$checksum_file_content_diff .= $hash . ' *' . $file . EOL;
-	}
-	$checksum_file_content_diff .= $config['source-2-label'] . ':' . $phpbb_version_secondary . EOL;
+	$checksum_file_content_diff = create_checksum_file($checksums_diff, $config['source-2-label'], $phpbb_version_secondary);
 }
 
 /*
@@ -327,7 +328,6 @@ if ($zip->open($hash_zip_filename) === true)
 	for ($i = 0; $i < $zip->numFiles; $i++)
 	{
 		$info = $zip->statIndex($i);
-		// var_dump($info);
 		$zip_list .= sprintf('%1$ 9u %2$ 9u  %3$s  %4$s',
 			/* 1 */ $info['size'],
 			/* 2 */ $info['comp_size'],
@@ -365,27 +365,23 @@ function get_files_recursive(string $folder): array
 {
 	$files = [];
 
-	$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($folder));
+	$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($folder, RecursiveDirectoryIterator::SKIP_DOTS));
 	foreach ($iterator as $file)
 	{
-		if ($file->isDir())
-		{
-			continue;
-		}
 		$files[] = [
-			'file' => str_replace('\\', '/', $file->getPathname()),
 			'path' => str_replace('\\', '/', $file->getPath()),
+			'file' => str_replace('\\', '/', $file->getPathname()),
 		];
 	}
 
 	return $files;
 }
 
-function get_package_version(string $source, string $package_name): string
+function get_package_version(string $source, string $label): string
 {
 	global $config;
 
-	$get_version = function ($content) use ($package_name)
+	$get_version = function ($content) use ($label)
 	{
 		preg_match('/\'PHPBB_VERSION\'\s*,\s*\'([0-9]+\.[0-9]+\.[0-9]+)\'/', $content, $matches);
 		$version = $matches[1] ?? null;
@@ -395,11 +391,11 @@ function get_package_version(string $source, string $package_name): string
 		}
 		else
 		{
-			terminate("{$package_name} package has an invalid version");
+			terminate("{$label} package has an invalid version");
 		}
 	};
 
-	if (is_zip($source) && file_exists($source))
+	if (is_zip($source))
 	{
 		$constants_file = $config['zip-root'] . 'includes/constants.php';
 		$zip = new ZipArchive();
@@ -417,12 +413,20 @@ function get_package_version(string $source, string $package_name): string
 			return $get_version($constants_content);
 		}
 	}
-	else
+	else if (is_dir($source))
 	{
 		$constants_file = $source . 'includes/constants.php';
 		if (file_exists($constants_file))
 		{
-			return $get_version(file_get_contents($constants_file));
+			$constants_content = @file_get_contents($constants_file);
+			if ($constants_content !== false)
+			{
+				return $get_version($constants_content);
+			}
+			else
+			{
+				terminate("[{$constants_file}] could not be opened");
+			}
 		}
 	}
 	terminate("constants.php not found in [{$source}]");
@@ -435,7 +439,7 @@ function get_package_checksums(string $source): array
 	$checksums		= [];
 	$error_messages	= '';
 
-	if (is_zip($source) && file_exists($source))
+	if (is_zip($source))
 	{
 		$checksums_zip = [];
 		$zip = new ZipArchive();
@@ -472,7 +476,7 @@ function get_package_checksums(string $source): array
 			$checksums[$row['file']] = $row['hash'];
 		}
 	}
-	else if (is_dir($source) && file_exists($source))
+	else if (is_dir($source))
 	{
 		$preg_folder = preg_quote(str_replace('\\', '/', $source), '/');
 		$files = get_files_recursive($source);
@@ -503,10 +507,22 @@ function get_package_checksums(string $source): array
 	if ($error_messages != '')
 	{
 		add_list_lines($error_messages);
-		terminate("source [{$source}] has the following issues:" . EOL . $error_messages);
+		terminate("Source [{$source}] has the following issues:" . EOL . $error_messages);
 	}
 
 	return $checksums;
+}
+
+function create_checksum_file(&$list, $label, $phpbb_version)
+{
+	$content = '';
+	foreach ($list as $file => $hash)
+	{
+		$content .= $hash . ' *' . $file . EOL;
+	}
+	$content .= $label . ':' . $phpbb_version . EOL;
+
+	return $content;
 }
 
 function add_dir_separator(string &$path, string $separator = '', bool $before = false, bool $not_empty = true): void
@@ -537,7 +553,12 @@ function add_list_lines(string &$text): void
 
 function is_zip(string $file): bool
 {
-	return substr($file, -4, 4) == '.zip';
+	if (file_exists($file))
+	{
+		return mime_content_type($file) == 'application/zip';
+	}
+
+	return false;
 }
 
 function cli_init(): void
@@ -561,15 +582,16 @@ function cli_init(): void
 	$cli_options = getopt($options_short, $options_long);
 }
 
-function cli_help(): void
+function cli_help(): string
 {
 	$missing = '{help missing}';
+	$help_text = '';
 
-	echo 'Syntax: ' . basename(__FILE__) . ' {parameters}' . EOL;
-	echo EOL;
-	echo 'Parameters:' . EOL;
+	$help_text .= 'Syntax: ' . basename(__FILE__) . ' {parameters}' . EOL;
+	$help_text .= EOL;
+	$help_text .= 'Parameters:' . EOL;
 
-	$config_content = file_get_contents(CONFIG_FILE);
+	$config_content = @file_get_contents(CONFIG_FILE);
 	preg_match_all('/\/\*-\s+(.*?)\s+-\*\/.*?\'(.*?)\'\s+=>/s', $config_content, $matches);
 	if (is_array($matches) && count($matches) == 3)
 	{
@@ -601,11 +623,11 @@ function cli_help(): void
 	$help_len		= $max_width - $para_indent - $para_len - strlen($separator);
 	foreach ($helpline as $param => $help)
 	{
-		echo str_repeat(' ', $para_indent) . sprintf('%1$ -' . ($para_len) . 's%2$s', $param, $separator) .
+		$help_text .= str_repeat(' ', $para_indent) . sprintf('%1$ -' . ($para_len) . 's%2$s', $param, $separator) .
 			wordwrap($help, $help_len, EOL . str_repeat(' ', $para_indent + $para_len + strlen($separator))) . EOL;
 	}
 
-	exit;
+	return $help_text;
 }
 
 function cli_get_option(string $opt, $default = null)

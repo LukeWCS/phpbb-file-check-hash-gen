@@ -1,7 +1,18 @@
+### 1.0.0
+(2023-10-07)
+
+* Beim Start wird jetzt die PHP Version geprüft und bei falschen Voraussetzungen das Skript mit Fehlermeldung abgebrochen.
+* Die Beispiele für `filecheck_hashgen_config.php` im Ordner `examples` waren fälschlicherweise im ANSI Format gespeichert. Auf UTF8 geändert.
+* Code Verbesserungen:
+  * Redundanten Code für die Generierung der Prüfsummen-Dateien zu einer Funktion zusammengefasst.
+  * Funktion `is_zip()` an das Verhalten von `is_dir()` angeglichen. Des Weiteren wird nicht mehr das Suffix geprüft, sondern der tatsächliche Dateityp.
+  * Optimierung.
+
 ### 0.5.1
 (2023-09-30)
 
 * Fix: Bei ungültiger Zeitzonen ID wurde E_NOTICE getriggert. Das wird jetzt abgefangen und eine kontrollierte Fehlermeldung ausgegeben.
+* Repo veröffentlicht.
 
 ### 0.5.0
 (2023-09-20)
