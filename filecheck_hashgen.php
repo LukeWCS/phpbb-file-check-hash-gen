@@ -29,9 +29,9 @@ if (!(version_compare(PHP_VERSION, '8.0.0', '>=') && version_compare(PHP_VERSION
 */
 define('EOL'			, "\n");
 define('VALID_CHARS'	, 'a-zA-Z0-9\/\-_.');
-define('CONFIG_FILE'	, __DIR__ . '/' . basename(__FILE__, '.php') . '_config.php');
+define('CONFIG_FILE'	, __DIR__ . '/config/' . basename(__FILE__, '.php') . '_config.php');
 
-$ver				= '1.0.0';
+$ver				= '1.0.1';
 $title				= "phpBB File Check Hash Generator v{$ver}";
 $ignore_file		= 'filecheck_ignore.txt';
 $exceptions_file	= 'filecheck_exceptions.txt';
@@ -52,7 +52,7 @@ if (file_exists(CONFIG_FILE))
 }
 else
 {
-	terminate('Config file [' . basename(CONFIG_FILE) . '] not found');
+	terminate('Config file [' . CONFIG_FILE . '] not found');
 }
 
 /*

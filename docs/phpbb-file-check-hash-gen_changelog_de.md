@@ -1,3 +1,9 @@
+### 1.0.1
+(2023-10-22)
+
+* Das Skript erwartet die Konfig-Datei jetzt im Ordner `config`. Sofern der Skriptname nicht geändert wurde, wäre das standardmässig also `config/filecheck_hashgen_config.php`.
+* Bei fehlender Konfig-Datei wird in der Meldung jetzt der vollständige Pfad angezeigt. Bisher wurde nur der Dateiname angezeigt.
+
 ### 1.0.0
 (2023-10-07)
 
