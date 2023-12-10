@@ -18,7 +18,7 @@
 /*
 * Check requirements
 */
-if (!(version_compare(PHP_VERSION, '8.0.0', '>=') && version_compare(PHP_VERSION, '8.3.0-dev', '<')))
+if (!(version_compare(PHP_VERSION, '8.0.0', '>=') && version_compare(PHP_VERSION, '8.4.0-dev', '<')))
 {
 	echo 'phpBB File Check Hash Generator: Invalid PHP Version ' . PHP_VERSION;
 	exit;
@@ -31,7 +31,7 @@ define('EOL'			, "\n");
 define('VALID_CHARS'	, 'a-zA-Z0-9\/\-_.');
 define('CONFIG_FILE'	, __DIR__ . '/config/' . basename(__FILE__, '.php') . '_config.php');
 
-$ver				= '1.0.1';
+$ver				= '1.0.2';
 $title				= "phpBB File Check Hash Generator v{$ver}";
 $ignore_file		= 'filecheck_ignore.txt';
 $exceptions_file	= 'filecheck_exceptions.txt';

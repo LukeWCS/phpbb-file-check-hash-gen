@@ -1,3 +1,7 @@
+### 1.0.2
+(2023-12-09)
+* Freigegeben für PHP 8.3, Versionsprüfung angepasst.
+
 ### 1.0.1
 (2023-10-22)
 
