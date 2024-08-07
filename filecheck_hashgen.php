@@ -6,6 +6,8 @@
 * @copyright (c) 2023 LukeWCS <phpBB.de>
 * @license GNU General Public License, version 2 (GPL-2.0-only)
 *
+* PHP requirements: 8.0.0 - 8.3.x
+*
 */
 
 /*
@@ -16,26 +18,20 @@
 # phpcs:disable PSR1.Files.SideEffects
 
 /*
-* Check requirements
-*/
-if (!(version_compare(PHP_VERSION, '8.0.0', '>=') && version_compare(PHP_VERSION, '8.4.0-dev', '<')))
-{
-	echo 'phpBB File Check Hash Generator: Invalid PHP Version ' . PHP_VERSION;
-	exit;
-}
-
-/*
 * Initialization
 */
 define('EOL'			, "\n");
 define('VALID_CHARS'	, 'a-zA-Z0-9\/\-_.');
 define('CONFIG_FILE'	, __DIR__ . '/config/' . basename(__FILE__, '.php') . '_config.php');
 
-$ver				= '1.0.2';
-$title				= "phpBB File Check Hash Generator v{$ver}";
-$ignore_file		= 'filecheck_ignore.txt';
-$exceptions_file	= 'filecheck_exceptions.txt';
-$start_time			= microtime(true);
+$ver					= '1.0.3';
+$title					= "phpBB File Check Hash Generator v{$ver}";
+$constants_file			= 'includes/constants.php';
+$checksum_file_name		= 'filecheck';
+$checksum_file_suffix	= '.md5';
+$ignore_file			= 'filecheck_ignore.txt';
+$exceptions_file		= 'filecheck_exceptions.txt';
+$start_time				= microtime(true);
 
 /*
 * Display: show title
@@ -166,6 +162,7 @@ add_dir_separator($config['zip-root'], '/');
 if (file_exists($config['source-1']))
 {
 	$phpbb_version_primary = get_package_version($config['source-1'], $config['source-1-label']);
+	$config = str_replace(['{PHPBB_VERSION}'], [$phpbb_version_primary], $config);
 }
 else
 {
@@ -184,10 +181,10 @@ if (!empty($config['source-2']))
 	}
 }
 
-$checksum_file_primary = 'filecheck_' . $phpbb_version_primary . '.md5';
+$checksum_file_primary = $checksum_file_name . '_' . $phpbb_version_primary . $checksum_file_suffix;
 if (!empty($config['source-2']))
 {
-	$checksum_file_diff = 'filecheck_' . $phpbb_version_secondary . '_diff' . '.md5';
+	$checksum_file_diff = $checksum_file_name . '_' . $phpbb_version_secondary . '_diff' . $checksum_file_suffix;
 }
 
 /*
@@ -265,7 +262,7 @@ if (!empty($config['source-2']))
 /*
 * Create the hash package ZIP
 */
-$hash_zip_filename = str_replace('$PHPBB_VER$', $phpbb_version_primary, $config['export-dir'] . $config['hash-zip-name']) . '.zip';
+$hash_zip_filename = $config['export-dir'] . $config['hash-zip-name'] . '.zip';
 $zip = new ZipArchive;
 if ($zip->open($hash_zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true)
 {
@@ -380,6 +377,7 @@ function get_files_recursive(string $folder): array
 function get_package_version(string $source, string $label): string
 {
 	global $config;
+	global $constants_file;
 
 	$get_version = function ($content) use ($label)
 	{
@@ -397,11 +395,10 @@ function get_package_version(string $source, string $label): string
 
 	if (is_zip($source))
 	{
-		$constants_file = $config['zip-root'] . 'includes/constants.php';
 		$zip = new ZipArchive();
 		if ($zip->open($source) === true)
 		{
-			$constants_content = $zip->getFromName($constants_file);
+			$constants_content = $zip->getFromName($config['zip-root'] . $constants_file);
 			$zip->close();
 		}
 		else
@@ -415,10 +412,9 @@ function get_package_version(string $source, string $label): string
 	}
 	else if (is_dir($source))
 	{
-		$constants_file = $source . 'includes/constants.php';
-		if (file_exists($constants_file))
+		if (file_exists($source . $constants_file))
 		{
-			$constants_content = @file_get_contents($constants_file);
+			$constants_content = @file_get_contents($source . $constants_file);
 			if ($constants_content !== false)
 			{
 				return $get_version($constants_content);
@@ -429,7 +425,7 @@ function get_package_version(string $source, string $label): string
 			}
 		}
 	}
-	terminate("constants.php not found in [{$source}]");
+	terminate("[{$constants_file}] not found in [{$source}]");
 }
 
 function get_package_checksums(string $source): array
@@ -592,14 +588,14 @@ function cli_help(): string
 	$help_text .= 'Parameters:' . EOL;
 
 	$config_content = @file_get_contents(CONFIG_FILE);
-	preg_match_all('/\/\*-\s+(.*?)\s+-\*\/.*?\'(.*?)\'\s+=>/s', $config_content, $matches);
+	preg_match_all('/\/\*>\s+(.+?)\s+<\*\/(?:\s|\R)+?\'(.+?)\'\s+=>/s', $config_content, $matches);
 	if (is_array($matches) && count($matches) == 3)
 	{
 		$config_help = [];
 		for ($i = 0; $i < count($matches[1]); $i++)
 		{
 			$config_help += [
-				$matches[2][$i] => str_replace(EOL, '', $matches[1][$i])
+				$matches[2][$i] => preg_replace(['/\R/', '/\t+/'], ['', ' '], $matches[1][$i])
 			];
 		}
 	}

@@ -1,5 +1,17 @@
+### 1.0.3
+(2024-08-07)
+
+* RegEx zum Parsen der Hilfstexte aus `filecheck_hashgen_config.php` für die `-h` Option geändert:
+  * Die Blöcke dürfen jetzt auch per Tab eingerückt sein. Somit können die Hilfstexte jetzt passend zu den Konfig-Werten untereinander ausgerichtet sein.
+  * Die Tags für die Hilfstexte geändert von `/*- ... -*/` zu `/*> ... <*/`.
+* Platzhalter-Format an das von File Check angepasst:
+  * `$PHPBB_VER$}` geändert zu `{PHPBB_VERSION}`
+* Die Standard Konfig-Datei `config\filecheck_hashgen_config.php` sowie alle Konfig-Dateien im `examples` Ordner an das geänderte RegEx und an die geänderten Platzhalter-Variablen angepasst.
+* Die Prüfung der PHP Voraussetzungen (Min/Max Version) war in dieser Form sinnfrei und wurde entfernt.
+
 ### 1.0.2
 (2023-12-09)
+
 * Freigegeben für PHP 8.3, Versionsprüfung angepasst.
 
 ### 1.0.1

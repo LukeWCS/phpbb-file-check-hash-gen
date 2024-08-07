@@ -11,72 +11,72 @@
 # phpcs:set VariableAnalysis.CodeAnalysis.VariableAnalysis validUnusedVariableNames config
 
 /*
- The static configuration can be defined here, which does not change with new phpBB versions.
- The dynamic configuration can then be passed via CLI. All config variables have the same name
- as their associated CLI parameters.
+	The static configuration can be defined here, which does not change with new phpBB versions.
+	The dynamic configuration can then be passed via CLI. All config variables have the same name
+	as their associated CLI parameters.
 
- Example:
+	Example:
 
- config: 'source-1' => ''
- CLI   : --source-1=""
+	config: 'source-1' => ''
+	CLI   : --source-1=""
 */
 
 $config = [
-/*-
- Primary source (ZIP or folder)
--*/
+/*>
+	Primary source (ZIP or folder)
+<*/
 	'source-1'			=> '',
 
-/*-
- Secondary source (ZIP or folder)
--*/
+/*>
+	Secondary source (ZIP or folder)
+<*/
 	'source-2'			=> '',
 
-/*-
- The folder where the finished hash package ZIP will be created.
--*/
+/*>
+	The folder where the finished hash package ZIP will be created.
+<*/
 	'export-dir'		=> '',
 
-/*-
- The folder within a ZIP, i.e. "phpBB3/". That could possibly change in 4.0.
--*/
+/*>
+	The folder within a ZIP, i.e. "phpBB3/". That could possibly change in 4.0.
+<*/
 	'zip-root'			=> 'phpBB3/',
 
-/*-
- The label of the primary hash package. Required for various displays, including error messages.
- This is also used by "phpBB File Check".
--*/
+/*>
+	The label of the primary hash package. Required for various displays, including error messages.
+	This is also used by "phpBB File Check".
+<*/
 	'source-1-label'	=> 'phpBB.com',
 
-/*-
- The label of the secondary hash package. Required for various displays, including error messages.
- This is also used by "phpBB File Check".
--*/
+/*>
+	The label of the secondary hash package. Required for various displays, including error messages.
+	This is also used by "phpBB File Check".
+<*/
 	'source-2-label'	=> '',
 
-/*-
- Text file in which one RegEx expression can be entered per line.
- This file is only evaluated by "phpBB File Check" and is added to the hash package ZIP.
- The file name in the hash package ZIP is changed to "filecheck_ignore.txt".
--*/
+/*>
+	Text file in which one RegEx expression can be entered per line.
+	This file is only evaluated by "phpBB File Check" and is added to the hash package ZIP.
+	The file name in the hash package ZIP is changed to "filecheck_ignore.txt".
+<*/
 	'ignore-file'		=> '',
 
-/*-
- Text file in which one file/folder exception can be entered per line.
- This file is only evaluated by "phpBB File Check" and is added to the hash package ZIP.
- The file name in the hash package ZIP is changed to "filecheck_exceptions.txt".
--*/
+/*>
+	Text file in which one file/folder exception can be entered per line.
+	This file is only evaluated by "phpBB File Check" and is added to the hash package ZIP.
+	The file name in the hash package ZIP is changed to "filecheck_exceptions.txt".
+<*/
 	'exceptions-file'	=> '',
 
-/*-
- The filename of the hash package ZIP to create, i.e. "phpBB_FileCheck_MD5_$PHPBB_VER$".
- $PHPBB_VER$ will be replaced with the phpBB version.
--*/
-	'hash-zip-name'		=> 'phpBB_FileCheck_MD5_$PHPBB_VER$',
+/*>
+	The filename of the hash package ZIP to create, i.e. "phpBB_FileCheck_MD5_{PHPBB_VERSION}".
+	{PHPBB_VERSION} will be replaced with the phpBB version.
+<*/
+	'hash-zip-name'		=> 'phpBB_FileCheck_MD5_{PHPBB_VERSION}',
 
-/*-
- For the date display when checking the hash package ZIP.
--*/
+/*>
+	For the date display when checking the hash package ZIP.
+<*/
 	'timezone-id'		=> 'UTC',
 ];
 
