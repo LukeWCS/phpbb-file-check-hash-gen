@@ -15,6 +15,7 @@
 */
 
 # phpcs:set VariableAnalysis.CodeAnalysis.VariableAnalysis validUndefinedVariableNames config
+# phpcs:set VariableAnalysis.CodeAnalysis.VariableAnalysis validUnusedVariableNames constants_file
 # phpcs:disable PSR1.Files.SideEffects
 
 /*
@@ -24,7 +25,7 @@ define('EOL'			, "\n");
 define('VALID_CHARS'	, 'a-zA-Z0-9\/\-_.');
 define('CONFIG_FILE'	, __DIR__ . '/config/' . basename(__FILE__, '.php') . '_config.php');
 
-$ver					= '1.0.3';
+$ver					= '1.0.4';
 $title					= "phpBB File Check Hash Generator v{$ver}";
 $constants_file			= 'includes/constants.php';
 $checksum_file_name		= 'filecheck';
@@ -101,6 +102,10 @@ if (cli_is_option('timezone-id'))
 {
 	$config['timezone-id'] = cli_get_option('timezone-id');
 }
+if (cli_is_option('date-format'))
+{
+	$config['date-format'] = cli_get_option('date-format');
+}
 
 /*
 * Check config
@@ -140,6 +145,10 @@ if (empty($config['timezone-id']))
 if (!@date_default_timezone_set($config['timezone-id']))
 {
 	terminate('Invalid timezone ID');
+}
+if (empty($config['date-format']))
+{
+	$config['date-format'] = 'd/m/Y h:i:s a';
 }
 
 /*
@@ -281,6 +290,7 @@ if ($zip->open($hash_zip_filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) =
 		$zip->addFile($config['exceptions-file'], $exceptions_file);
 		$zip->setMtimeIndex($zip->numFiles - 1, time());
 	}
+	$zip->setArchiveComment("Generated with {$title}");
 	$zip->close();
 }
 else
@@ -321,20 +331,35 @@ echo sprintf('Hash package ZIP   : %1$s (%2$u bytes)',
 
 if ($zip->open($hash_zip_filename) === true)
 {
-	$zip_list = '';
+	$zip_list = [];
 	for ($i = 0; $i < $zip->numFiles; $i++)
 	{
 		$info = $zip->statIndex($i);
-		$zip_list .= sprintf('%1$ 9u %2$ 9u  %3$s  %4$s',
-			/* 1 */ $info['size'],
-			/* 2 */ $info['comp_size'],
-			/* 3 */ date('Y-m-d H:i:s', $info['mtime']),
-			/* 4 */ $info['name']
+
+		$zip_list[] = [
+			'size'		=> $info['size'],
+			'comp_size'	=> $info['comp_size'],
+			'date_time'	=> date($config['date-format'], $info['mtime']),
+			'file'		=> $info['name'],
+		];
+	}
+
+	$zip_list_str = '';
+	$date_time_max_len = column_max_len($zip_list, 'date_time');
+	for ($i = 0; $i < $zip->numFiles; $i++)
+	{
+		$info = $zip->statIndex($i);
+		$zip_list_str .= sprintf('%1$ 9u %2$ 9u  %3$s  %4$s',
+			/* 1 */ $zip_list[$i]['size'],
+			/* 2 */ $zip_list[$i]['comp_size'],
+			/* 3 */ $zip_list[$i]['date_time'],
+			/* 4 */ $zip_list[$i]['file']
 		) . EOL;
 	}
-	add_list_lines($zip_list);
-	$zip_list = EOL . 'Size      Comp.Size  Date       Time      File' . $zip_list;
-	echo $zip_list;
+	add_list_lines($zip_list_str);
+	$zip_list_str = EOL . sprintf('%1$-9s %2$-9s  %3$-' . $date_time_max_len . 's  %4$s', 'Size', 'Comp.Size', 'Date/Time', 'File') . $zip_list_str;
+	echo $zip_list_str;
+
 	$zip->close();
 }
 else
@@ -343,10 +368,20 @@ else
 }
 
 /*
-* Display: show runtime
+* Display: show runtime information
 */
 echo EOL;
-echo sprintf('Finished! Run time: %.3f seconds', microtime(true) - $start_time) . EOL;
+echo 'Finished!' . EOL;
+
+$exec_info =	sprintf('Run time          : %.3f seconds', microtime(true) - $start_time) . EOL;
+$exec_info .=	sprintf('Max execution time: %u seconds', ini_get('max_execution_time')) . EOL;
+$exec_info .=	sprintf('Memory peak usage : %s bytes', number_format(memory_get_peak_usage())) . EOL;
+$exec_info .=	sprintf('Memory limit      : %s', ini_get('memory_limit')) . EOL;
+
+echo EOL;
+echo 'Script/PHP information' . EOL;
+echo str_repeat('-', column_max_len($exec_info)) . EOL;
+echo $exec_info;
 
 /*
 * Script end
@@ -540,11 +575,17 @@ function add_dir_separator(string &$path, string $separator = '', bool $before =
 	}
 }
 
-function add_list_lines(string &$text): void
+function add_list_lines(string &$list): void
 {
-	$output_rows = array_map('strlen', explode(EOL, $text));
-	$list_separator = str_repeat('-', max($output_rows));
-	$text = EOL . $list_separator . EOL . $text . $list_separator . EOL ;
+	$list_separator = str_repeat('-', column_max_len($list));
+	$list = EOL . $list_separator . EOL . $list . $list_separator . EOL ;
+}
+
+function column_max_len(string|array $list, string $column_name = ''): int
+{
+	$column = is_array($list) ? array_column($list, $column_name) : explode(EOL, $list);
+
+	return max(array_map('strlen', $column));
 }
 
 function is_zip(string $file): bool
@@ -588,6 +629,7 @@ function cli_help(): string
 	$help_text .= 'Parameters:' . EOL;
 
 	$config_content = @file_get_contents(CONFIG_FILE);
+	$config_content = preg_replace('/\[http[s]?:\/\/.*?\]/', '[link in config file]', $config_content);
 	preg_match_all('/\/\*>\s+(.+?)\s+<\*\/(?:\s|\R)+?\'(.+?)\'\s+=>/s', $config_content, $matches);
 	if (is_array($matches) && count($matches) == 3)
 	{
@@ -600,16 +642,17 @@ function cli_help(): string
 		}
 	}
 	$helpline = [
-		'--source-1="{ZIP/folder}"'			=> $config_help['source-1'] ?? $missing,
-		'--source-2="{ZIP/folder}"'			=> $config_help['source-2'] ?? $missing,
-		'--export-dir="{folder}"'			=> $config_help['export-dir'] ?? $missing,
-		'--zip-root="{folder}"'				=> $config_help['zip-root'] ?? $missing,
-		'--source-1-label="{label}"'		=> $config_help['source-1-label'] ?? $missing,
-		'--source-2-label="{label}"'		=> $config_help['source-2-label'] ?? $missing,
-		'--ignore-file="{file}"'			=> $config_help['ignore-file'] ?? $missing,
-		'--exceptions-file="{file}"'		=> $config_help['exceptions-file'] ?? $missing,
-		'--hash-zip-name="{filename}"'		=> $config_help['hash-zip-name'] ?? $missing,
-		'--timezone-id="{timezone ID}"'		=> $config_help['timezone-id'] ?? $missing,
+		'--source-1="{ZIP/folder}"'		=> $config_help['source-1'] ?? $missing,
+		'--source-2="{ZIP/folder}"'		=> $config_help['source-2'] ?? $missing,
+		'--export-dir="{folder}"'		=> $config_help['export-dir'] ?? $missing,
+		'--zip-root="{folder}"'			=> $config_help['zip-root'] ?? $missing,
+		'--source-1-label="{label}"'	=> $config_help['source-1-label'] ?? $missing,
+		'--source-2-label="{label}"'	=> $config_help['source-2-label'] ?? $missing,
+		'--ignore-file="{file}"'		=> $config_help['ignore-file'] ?? $missing,
+		'--exceptions-file="{file}"'	=> $config_help['exceptions-file'] ?? $missing,
+		'--hash-zip-name="{filename}"'	=> $config_help['hash-zip-name'] ?? $missing,
+		'--timezone-id="{timezone ID}"'	=> $config_help['timezone-id'] ?? $missing,
+		'--date-format="{date format}"'	=> $config_help['date-format'] ?? $missing,
 	];
 
 	$max_width		= 80;
@@ -641,3 +684,4 @@ function cli_is_option(string $opt): bool
 }
 
 # phpcs:set VariableAnalysis.CodeAnalysis.VariableAnalysis validUndefinedVariableNames
+# phpcs:set VariableAnalysis.CodeAnalysis.VariableAnalysis validUnusedVariableNames

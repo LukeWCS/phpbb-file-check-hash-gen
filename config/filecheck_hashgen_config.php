@@ -38,7 +38,7 @@ $config = [
 	'export-dir'		=> '',
 
 /*>
-	The folder within a ZIP, i.e. "phpBB3/". That could possibly change in 4.0.
+	The folder within a ZIP, i.e. 'phpBB3/'. That could possibly change in 4.0.
 <*/
 	'zip-root'			=> 'phpBB3/',
 
@@ -69,15 +69,20 @@ $config = [
 	'exceptions-file'	=> '',
 
 /*>
-	The filename of the hash package ZIP to create, i.e. "phpBB_FileCheck_MD5_{PHPBB_VERSION}".
+	The filename of the hash package ZIP to create, i.e. 'phpBB_FileCheck_MD5_{PHPBB_VERSION}'.
 	{PHPBB_VERSION} will be replaced with the phpBB version.
 <*/
 	'hash-zip-name'		=> 'phpBB_FileCheck_MD5_{PHPBB_VERSION}',
 
 /*>
-	For the date display when checking the hash package ZIP.
+	Timezone for the date/time display when checking the hash package ZIP, i.e. 'UTC'. See [https://www.php.net/manual/en/timezones.php]
 <*/
 	'timezone-id'		=> 'UTC',
+
+/*>
+	Format for the date/time display when checking the hash package ZIP, i.e. 'd/m/Y h:i:s a'. See [https://www.php.net/manual/en/datetime.format.php]
+<*/
+	'date-format'		=> 'Y-m-d H:i:s',
 ];
 
 # phpcs:set VariableAnalysis.CodeAnalysis.VariableAnalysis validUnusedVariableNames

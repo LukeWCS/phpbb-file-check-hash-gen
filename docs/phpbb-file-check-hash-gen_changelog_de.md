@@ -1,3 +1,15 @@
+### 1.0.4
+(2024-08-31)
+
+* Dem ZIP wird jetzt ein Kommentar hinzugefügt mit Namen und Version von FCHG.
+* Bei der Anzeige des ZIP-Inhalts des generierten Prüfsummen-Pakets kann jetzt das Format von Datum und Uhrzeit frei definiert werden.
+  * `config\filecheck_hashgen_config.php` sowie alle Konfig-Dateien im `examples` Ordner um die Option `date-format` erweitert.
+  * CLI Schnittstelle um die Option `--date-format=""` erweitert.
+  * Hilfe Funktion für die Option `--date-format=""` erweitert.
+* Bei der Option `-h` werden jetzt Links in Hilfstexten durch `[link in config file]` ersetzt, damit es bei der Anzeige der Hilfe nicht zur Überschreitung der maximalen Breite kommen kann.
+* Anzeige der Laufzeit-Informationen von File Check übernommen.
+* Funktion `column_max_len()` von File Check übernommen und an PHP 8 angepasst.
+
 ### 1.0.3
 (2024-08-07)
 
@@ -5,7 +17,7 @@
   * Die Blöcke dürfen jetzt auch per Tab eingerückt sein. Somit können die Hilfstexte jetzt passend zu den Konfig-Werten untereinander ausgerichtet sein.
   * Die Tags für die Hilfstexte geändert von `/*- ... -*/` zu `/*> ... <*/`.
 * Platzhalter-Format an das von File Check angepasst:
-  * `$PHPBB_VER$}` geändert zu `{PHPBB_VERSION}`
+  * `$PHPBB_VER$` geändert zu `{PHPBB_VERSION}`
 * Die Standard Konfig-Datei `config\filecheck_hashgen_config.php` sowie alle Konfig-Dateien im `examples` Ordner an das geänderte RegEx und an die geänderten Platzhalter-Variablen angepasst.
 * Die Prüfung der PHP Voraussetzungen (Min/Max Version) war in dieser Form sinnfrei und wurde entfernt.
 

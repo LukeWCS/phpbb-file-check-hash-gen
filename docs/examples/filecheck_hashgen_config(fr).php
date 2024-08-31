@@ -14,9 +14,9 @@
 	The static configuration can be defined here, which does not change with new phpBB versions.
 	The dynamic configuration can then be passed via CLI. All config variables have the same name
 	as their associated CLI parameters.
-	
+
 	Example:
-	
+
 	config: 'source-1' => ''
 	CLI   : --source-1=""
 */
@@ -38,7 +38,7 @@ $config = [
 	'export-dir'		=> '',
 
 /*>
-	The folder within a ZIP, i.e. "phpBB3/". That could possibly change in 4.0.
+	The folder within a ZIP, i.e. 'phpBB3/'. That could possibly change in 4.0.
 <*/
 	'zip-root'			=> 'phpBB3/',
 
@@ -52,7 +52,7 @@ $config = [
 	The label of the secondary hash package. Required for various displays, including error messages.
 	This is also used by "phpBB File Check".
 <*/
-	'source-2-label'	=> 'phpBB-Italia.it',
+	'source-2-label'	=> 'phpBB-fr.com',
 
 /*>
 	Text file in which one RegEx expression can be entered per line.
@@ -66,18 +66,23 @@ $config = [
 	This file is only evaluated by "phpBB File Check" and is added to the hash package ZIP.
 	The file name in the hash package ZIP is changed to "filecheck_exceptions.txt".
 <*/
-	'exceptions-file'	=> 'filecheck_exceptions(example_it).txt',
+	'exceptions-file'	=> 'docs/examples/filecheck_exceptions(fr).txt',
 
 /*>
-	The filename of the hash package ZIP to create, i.e. "phpBB_FileCheck_MD5_{PHPBB_VERSION}".
+	The filename of the hash package ZIP to create, i.e. 'phpBB_FileCheck_MD5_{PHPBB_VERSION}'.
 	{PHPBB_VERSION} will be replaced with the phpBB version.
 <*/
-	'hash-zip-name'		=> 'phpBB_FileCheck_MD5_{PHPBB_VERSION}_it',
+	'hash-zip-name'		=> 'phpBB_FileCheck_MD5_{PHPBB_VERSION}_fr',
 
 /*>
-	For the date display when checking the hash package ZIP.
+	Timezone for the date/time display when checking the hash package ZIP, i.e. 'UTC'. See: [https://www.php.net/manual/en/timezones.php]
 <*/
-	'timezone-id'		=> 'Europe/Rome',
+	'timezone-id'		=> 'Europe/Paris',
+
+/*>
+	Date format for the date/time display when checking the hash package ZIP, i.e. 'd/m/Y h:i:s a'. See: [https://www.php.net/manual/en/datetime.format.php]
+<*/
+	'Format'		=> 'Y-m-d H:i:s',
 ];
 
 # phpcs:set VariableAnalysis.CodeAnalysis.VariableAnalysis validUnusedVariableNames
